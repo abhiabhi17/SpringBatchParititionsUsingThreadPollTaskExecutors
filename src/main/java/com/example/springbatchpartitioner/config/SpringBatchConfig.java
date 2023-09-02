@@ -38,6 +38,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 @AllArgsConstructor
 public class SpringBatchConfig {
 
+    /*  Job have Steps
+            Steps have Iteam Reader- Item Processor-Item Writer
+        */
+
 
     private JobBuilderFactory jobBuilderFactory;
     private StepBuilderFactory stepBuilderFactory;
@@ -50,6 +54,12 @@ public class SpringBatchConfig {
         return jobBuilderFactory.get("importCustomers")
                 .flow(masterStep()).end().build();
     }
+
+    /* In Step We have to give reader () bean, writer bean which is of customerItemWriter Which implements ItemWriter
+     *  Fault Tolerance is like exception handling , if any exceptions occured during reading or wrting csv file ,process of writing to database should not stop
+     * skip method is for to skip  that special kind of exception  like number format exception
+     * Listner class is providing bean of skiplisten which implements skip listeenr
+     * which listens where the excpetion occurd whter it is in itemreder or item writer or item processor */
     @Bean
     public Step masterStep()
     {
@@ -75,16 +85,22 @@ public class SpringBatchConfig {
                 .build();
     }
 
+    /* Skip Listener is an interface which listens all the exceptions where occured in item reader or item writer or processor  */
     @Bean
     public SkipListener skipListener(){
         return new StepSkipListener();
     }
+
+    /* Skip Policy  is an interface is used to write our custom skip exceptions just like .skip(NumberformatException.class) */
     @Bean
     public SkipPolicy skipPolicy() {
         return  new ExceptionSkipPolicy();
     }
 
 
+    /* Item Reader is used to read the  the data from csv file
+     * skip lines is used to skip the header lien of csv file
+     * line mapper bean is used to read the data line by line  */
     @Bean // Manullay user has to create a bean object when the class is @confirguration
     public FlatFileItemReader<Customer>  reader()
     {
@@ -95,6 +111,11 @@ public class SpringBatchConfig {
         itemReader.setLineMapper(lineMapper());
         return itemReader;
     }
+
+    /* Item Reader is used to read the  the data from csv file
+     * skip lines is used to skip the header lien of csv file
+     * line mapper bean is used to read the data line by line
+     * LineTokenizer sperates with comma value */
     private LineMapper<Customer> lineMapper() {
         DefaultLineMapper<Customer> lineMapper=new DefaultLineMapper<>();
 
@@ -103,7 +124,7 @@ public class SpringBatchConfig {
         lineTokenizer.setStrict(false);
         lineTokenizer.setNames("id","firstName","lastName","email","gender","contactNo","country","dob");
 
-
+        /* BeanWrapperField is used to map the csv file oject to customer object  */
         BeanWrapperFieldSetMapper<Customer> fieldSetMapper=new BeanWrapperFieldSetMapper<>();
         fieldSetMapper.setTargetType(Customer.class);
 
@@ -111,7 +132,7 @@ public class SpringBatchConfig {
         lineMapper.setFieldSetMapper(fieldSetMapper);
         return  lineMapper;
     }
-
+    /* This process bean is used to process  */
     @Bean
     public  CustomerProcessor processor()
     {
@@ -127,12 +148,16 @@ public class SpringBatchConfig {
 //        return writer;
 //    }
 
+
+    /* this bean implements partitioner  based on grid size it divides  */
     @Bean
    public ColumnRangePartitioner partitioner()
    {
        return new ColumnRangePartitioner();
    }
 
+
+    /* TaskExecutorPartitionHandler is used to divied based on grid size   */
    @Bean
    public PartitionHandler partitonHandlder()
    {
@@ -143,6 +168,7 @@ public class SpringBatchConfig {
        return taskExecutorPartitionHandler;
    }
 
+    /* TaskExecutor is used to provide pool size    */
     @Bean
     public TaskExecutor taskExecutor()
     {

@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/*
+ This Class is used to write to the repository database from csv file
 
+ */
 @Component
 public class CustomerWriter implements ItemWriter<Customer> {
 

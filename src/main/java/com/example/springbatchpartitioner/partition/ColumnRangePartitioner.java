@@ -6,6 +6,8 @@ import org.springframework.batch.item.ExecutionContext;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/* This class implements Partitoner  ,Based on grid size it divides the number of records in csv in grid based   */
 public class ColumnRangePartitioner implements Partitioner {
 
     @Override

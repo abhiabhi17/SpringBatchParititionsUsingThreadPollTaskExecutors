@@ -9,6 +9,7 @@ import org.springframework.batch.core.SkipListener;
 
 import java.util.logging.Logger;
 
+/* Skip listener is used to listen all the exception where it is occured whter it is in itemreader,itemwriter or processor   */
 public class StepSkipListener implements SkipListener<Customer,Number> {
 
     //Logger logger = (Logger) (Logger) LoggerFactory.getLogger(StepSkipListener.class);

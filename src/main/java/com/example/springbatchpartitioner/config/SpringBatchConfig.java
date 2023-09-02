@@ -1,17 +1,20 @@
 package com.example.springbatchpartitioner.config;
 
 import com.example.springbatchpartitioner.entity.Customer;
+import com.example.springbatchpartitioner.listener.StepSkipListener;
 import com.example.springbatchpartitioner.partition.ColumnRangePartitioner;
 import com.example.springbatchpartitioner.repository.CustomerRepository;
 import lombok.AllArgsConstructor;
 import net.bytebuddy.utility.nullability.MaybeNull;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.partition.PartitionHandler;
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
+import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemWriter;
@@ -63,7 +66,22 @@ public class SpringBatchConfig {
                 .reader(reader())
                 .processor(processor())
                 .writer(customerWriter)
+                .faultTolerant()//If any exception in ilegal value in any field in csv file it skips that row and inserts others
+//                .skipLimit(100)
+//                .skip(Exception.class)//Skip any exceptions
+//                .noSkip(IllegalArgumentException.class)//dont skip (records should not insert)
+                .listener(skipListener())
+                .skipPolicy(skipPolicy())
                 .build();
+    }
+
+    @Bean
+    public SkipListener skipListener(){
+        return new StepSkipListener();
+    }
+    @Bean
+    public SkipPolicy skipPolicy() {
+        return  new ExceptionSkipPolicy();
     }
 
 
